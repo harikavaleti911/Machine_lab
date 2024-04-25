@@ -1,0 +1,100 @@
+import numpy as np
+import pandas as pd
+
+data=pd.read_csv("play_tennis.csv")
+data
+
+data[data.columns[2]]
+
+d=data.drop('day',axis=1,inplace=False)
+d
+
+spl_ra=0.6
+tra_set=[]
+test_set=[]
+n=int(len(d)*spl_ra)
+for i in range(0,d.shape[0]):
+    if(len(tra_set)<n):
+        tra_set.append(list(d.iloc[i]))
+    else:
+        test_set.append(list(d.iloc[i]))
+print("Training Set:")
+tra_set
+
+print("Test Set:")
+test_set
+
+print("Size of training dataset=",len(tra_set))
+print("Size of test dataset",len(test_set))
+
+
+y=0
+n=0
+for i in range(0,len(tra_set)):
+    if(tra_set[i][4]=='Yes'):
+        y=y+1
+    else:
+        n=n+1
+pro_y=y/len(tra_set)
+pro_n=n/len(tra_set)
+
+
+pro_over=pd.DataFrame([['Yes',y,pro_y],['No',n,pro_n]],columns=['Target','Count',"Probability"])
+pro_over
+
+
+df_tra=pd.DataFrame(tra_set)
+df_tra
+
+
+df_test=pd.DataFrame(test_set)
+df_test
+
+l=[]
+for i in range(0,df_test.shape[1]-1):
+    l.append(list(pd.unique(df_test[i])))
+l
+
+y_prob=[]
+n_prob=[]
+pro_df=pd.DataFrame(columns=['Attribute','Yes','No'])
+for i in range(0,len(l)):
+    for j in range(0,len(l[i])):
+        n_count=0
+        y_count=0
+        l1=[]
+        for k in range(0,len(df_tra)):
+            if(l[i][j]==df_tra[i][k] and df_tra[len(l)][k]=='Yes'):
+                y_count=y_count+1
+            if(l[i][j]==df_tra[i][k] and df_tra[len(l)][k]=='No'):
+                n_count=n_count+1
+        df1=pd.DataFrame({'Attribute':l[i][j],'Yes':y_count/len(df_tra),'No':n_count/len(df_tra)},index=[0])
+        pro_df=pd.concat([pro_df,df1],ignore_index=True)
+pro_df
+
+
+final_df=pd.DataFrame(columns=['Instance','Prediction','Target'])
+for i in range(0,df_test.shape[0]):
+    y_proba=1
+    n_proba=1
+    for j in range(0,df_test.shape[1]):
+        for k in range(0,len(pro_df)):
+            if(df_test[j][i]==pro_df['Attribute'][k]):
+                y_proba=y_proba*pro_df['Yes'][k]
+                n_proba=n_proba*pro_df['No'][k]
+    if(y_proba>n_proba):
+        d1=pd.DataFrame({'Instance':i+1,'Prediction':'Yes','Target':df_test[df_test.shape[1]-1][i]},index=[0])
+        final_df=pd.concat([final_df,d1],ignore_index=True)
+    else:
+        d1=pd.DataFrame({'Instance':i+1,'Prediction':'No','Target':df_test[df_test.shape[1]-1][i]},index=[0])
+        final_df=pd.concat([final_df,d1],ignore_index=True)
+final_df
+
+c=0
+for i in range(0,len(final_df)):
+    if(final_df['Prediction'][i]==final_df['Target'][i]):
+        c=c+1
+acc=(c/len(final_df))*100
+print("Acuracy=",acc,"%")
+
+
